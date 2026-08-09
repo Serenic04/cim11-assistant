@@ -1,0 +1,23 @@
+# Environnements
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# Secrets
+*.key
+secrets.*
+
+# Modèles volumineux (à récupérer séparément, non versionnés dans Git)
+*.safetensors
+*.pt
+*.pth
+checkpoint-*/
+
+# Données volumineuses / sous licence (ATIH, CCAM...) — ne pas committer
+data-api/db/seed_data/*.csv
+!data-api/db/seed_data/.gitkeep
+
+# Divers
+.DS_Store
+*.log
