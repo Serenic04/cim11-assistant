@@ -50,7 +50,7 @@ CREATE TABLE synonyme (
 );
 
 CREATE TABLE code_postcoord (
-    code_postcoord      VARCHAR(50) PRIMARY KEY,
+    code_postcoord      VARCHAR(255) PRIMARY KEY,
     code_racine         VARCHAR(20) NOT NULL REFERENCES code_cim11(code) ON DELETE CASCADE,
     libelles_extensions TEXT
 );

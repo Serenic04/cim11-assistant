@@ -86,7 +86,7 @@ class Synonyme(Base):
 class CodePostcoord(Base):
     __tablename__ = "code_postcoord"
 
-    code_postcoord = Column(String(50), primary_key=True)
+    code_postcoord = Column(String(255), primary_key=True)
     code_racine = Column(String(20), ForeignKey("code_cim11.code", ondelete="CASCADE"), nullable=False)
     libelles_extensions = Column(Text)
 
