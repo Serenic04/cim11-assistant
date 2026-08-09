@@ -37,6 +37,14 @@ pip install -r model_api/requirements.txt
 uvicorn model_api.app.main:app --reload --port 8001
 ```
 
+### app_streamlit
+
+```bash
+pip install -r app_streamlit/requirements.txt
+export MODEL_API_URL=http://localhost:8001 DATA_API_URL=http://localhost:8000
+streamlit run app_streamlit/app.py
+```
+
 ## Origine des données
 
 Toutes les données (CRH, identités patient) sont **synthétiques**, générées via l'API Mistral pendant

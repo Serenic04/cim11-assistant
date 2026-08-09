@@ -21,10 +21,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r data_api/requirements.txt
+          pip install -r app_streamlit/requirements.txt
           pip install -r requirements-dev.txt
 
       - name: Lint (flake8)
-        run: flake8 data_api/app model_api/app --max-line-length=120 --extend-ignore=E203
+        run: flake8 data_api/app model_api/app app_streamlit --max-line-length=120 --extend-ignore=E203
 
       - name: Run tests (echantillon reduit, execution rapide)
         run: pytest tests/ -v
@@ -64,3 +65,11 @@ jobs:
           file: model_api/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/model-api:latest,ghcr.io/${{ github.repository }}/model-api:${{ github.sha }}
+
+      - name: Build & push app_streamlit
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: app_streamlit/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/app-streamlit:latest,ghcr.io/${{ github.repository }}/app-streamlit:${{ github.sha }}
