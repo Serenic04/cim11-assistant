@@ -7,6 +7,11 @@ Sources (voir docs/MCD_MLD.md) :
   - api/verif_postcoord/data/codes_postcoord_realistes_v2.csv -> code_postcoord
   - api/postcoord_reference/data/axes_par_code.csv -> axe_postcoord
 
+N'utilise que la bibliotheque standard (csv, json) pour la lecture des fichiers,
+volontairement, afin de ne pas dependre d'un paquet necessitant une compilation
+native (pandas a pose probleme sur certains environnements Windows sans outils
+de compilation C++ installes).
+
 Usage :
     set SERENIC_M_DIR=C:\\Users\\mohan\\Desktop\\stage_aphp\\Serenic_M   (Windows, cmd)
     $env:SERENIC_M_DIR="C:\\Users\\mohan\\Desktop\\stage_aphp\\Serenic_M" (PowerShell)
@@ -14,13 +19,12 @@ Usage :
     python -m etl.load_data --limit-referentiel 5000   # --limit-referentiel 0 = tout charger
 """
 import argparse
+import csv
 import json
 import os
 import re
 import sys
 from pathlib import Path
-
-import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from app.database import engine, SessionLocal, Base  # noqa: E402
@@ -33,6 +37,8 @@ SERENIC_M_DIR = Path(os.getenv("SERENIC_M_DIR", r"C:\Users\mohan\Desktop\stage_a
 _CODE_PART = r"[A-Z0-9]{2,10}(?:\.[A-Z0-9]+)?"
 CODE_RE = rf"{_CODE_PART}(?:&{_CODE_PART})*"
 DIAG_RE = re.compile(rf"([^(]+?)\s*\(({CODE_RE})\)")
+
+BATCH_SIZE = 5000
 
 
 def parse_assistant_reply(reply: str) -> list[dict]:
@@ -52,54 +58,114 @@ def parse_assistant_reply(reply: str) -> list[dict]:
     return diags
 
 
-def load_referentiel_codes(db, limit: int):
+def _read_csv_rows(path: Path, delimiter: str = ","):
+    """Lit un CSV volumineux ligne a ligne (pas de chargement complet en memoire)."""
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        yield from csv.DictReader(f, delimiter=delimiter)
+
+
+def _bulk_insert(conn, table, rows: list[dict]):
+    if rows:
+        conn.execute(table.insert(), rows)
+
+
+def load_referentiel_codes(conn, limit: int) -> set:
     path = SERENIC_M_DIR / "api" / "data" / "cim11_termes.csv"
-    df = pd.read_csv(path, usecols=["code", "texte", "type"])
-    df = df.rename(columns={"texte": "libelle"}).drop_duplicates(subset="code")
-    if limit:
-        df = df.head(limit)
-    df.to_sql("code_cim11", con=db.get_bind(), if_exists="append", index=False, chunksize=5000, method="multi")
-    print(f"code_cim11 : {len(df)} lignes chargées")
-    return set(df["code"])
+    table = models.CodeCim11.__table__
+    seen = set()
+    batch = []
+    count = 0
+    for row in _read_csv_rows(path):
+        code = row["code"]
+        if code in seen:
+            continue
+        seen.add(code)
+        batch.append({"code": code, "libelle": row["texte"], "type": row.get("type")})
+        count += 1
+        if len(batch) >= BATCH_SIZE:
+            _bulk_insert(conn, table, batch)
+            batch = []
+        if limit and count >= limit:
+            break
+    _bulk_insert(conn, table, batch)
+    print(f"code_cim11 : {count} lignes chargées")
+    return seen
 
 
-def load_synonymes(db, valid_codes: set, limit: int):
+def load_synonymes(conn, valid_codes: set, limit: int):
     path = SERENIC_M_DIR / "Recherche_Synonymes_CIM10" / "synonymes.csv"
-    df = pd.read_csv(path, sep=";")
-    df = df.rename(columns={"code": "code_cim11"})
-    df = df[df["code_cim11"].isin(valid_codes)]
-    if limit:
-        df = df.head(limit)
-    df[["code_cim11", "synonyme", "source"]].to_sql(
-        "synonyme", con=db.get_bind(), if_exists="append", index=False, chunksize=5000, method="multi"
-    )
-    print(f"synonyme : {len(df)} lignes chargées")
+    table = models.Synonyme.__table__
+    batch = []
+    count = 0
+    for row in _read_csv_rows(path, delimiter=";"):
+        if row["code"] not in valid_codes:
+            continue
+        batch.append({"code_cim11": row["code"], "synonyme": row["synonyme"], "source": row.get("source")})
+        count += 1
+        if len(batch) >= BATCH_SIZE:
+            _bulk_insert(conn, table, batch)
+            batch = []
+        if limit and count >= limit:
+            break
+    _bulk_insert(conn, table, batch)
+    print(f"synonyme : {count} lignes chargées")
 
 
-def load_postcoord(db, valid_codes: set, limit: int):
+def load_postcoord(conn, valid_codes: set, limit: int):
     path = SERENIC_M_DIR / "api" / "verif_postcoord" / "data" / "codes_postcoord_realistes_v2.csv"
-    df = pd.read_csv(path)
-    df = df.rename(columns={"code_racine": "code_racine", "libelles_extensions": "libelles_extensions"})
-    df = df[df["code_racine"].isin(valid_codes)].drop_duplicates(subset="code_postcoord")
-    if limit:
-        df = df.head(limit)
-    df[["code_postcoord", "code_racine", "libelles_extensions"]].to_sql(
-        "code_postcoord", con=db.get_bind(), if_exists="append", index=False, chunksize=5000, method="multi"
-    )
-    print(f"code_postcoord : {len(df)} lignes chargées")
+    table = models.CodePostcoord.__table__
+    seen = set()
+    batch = []
+    count = 0
+    for row in _read_csv_rows(path):
+        if row["code_racine"] not in valid_codes:
+            continue
+        cp = row["code_postcoord"]
+        if cp in seen:
+            continue
+        seen.add(cp)
+        batch.append(
+            {
+                "code_postcoord": cp,
+                "code_racine": row["code_racine"],
+                "libelles_extensions": row.get("libelles_extensions"),
+            }
+        )
+        count += 1
+        if len(batch) >= BATCH_SIZE:
+            _bulk_insert(conn, table, batch)
+            batch = []
+        if limit and count >= limit:
+            break
+    _bulk_insert(conn, table, batch)
+    print(f"code_postcoord : {count} lignes chargées")
 
 
-def load_axes(db, valid_codes: set, limit: int):
+def load_axes(conn, valid_codes: set, limit: int):
     path = SERENIC_M_DIR / "api" / "postcoord_reference" / "data" / "axes_par_code.csv"
-    df = pd.read_csv(path)
-    df = df.rename(columns={"code": "code_cim11"})
-    df = df[df["code_cim11"].isin(valid_codes)]
-    if limit:
-        df = df.head(limit)
-    df[["code_cim11", "axe_nom", "allow_multiple", "taille_axe", "raison_arret"]].to_sql(
-        "axe_postcoord", con=db.get_bind(), if_exists="append", index=False, chunksize=5000, method="multi"
-    )
-    print(f"axe_postcoord : {len(df)} lignes chargées")
+    table = models.AxePostcoord.__table__
+    batch = []
+    count = 0
+    for row in _read_csv_rows(path):
+        if row["code"] not in valid_codes:
+            continue
+        batch.append(
+            {
+                "code_cim11": row["code"],
+                "axe_nom": row["axe_nom"],
+                "allow_multiple": row.get("allow_multiple"),
+                "taille_axe": int(row["taille_axe"]) if row.get("taille_axe") else None,
+                "raison_arret": row.get("raison_arret") or None,
+            }
+        )
+        count += 1
+        if len(batch) >= BATCH_SIZE:
+            _bulk_insert(conn, table, batch)
+            batch = []
+        if limit and count >= limit:
+            break
+    _bulk_insert(conn, table, batch)
+    print(f"axe_postcoord : {count} lignes chargées")
 
 
 def load_crh(db, valid_codes: set):
@@ -135,12 +201,15 @@ def main():
     args = parser.parse_args()
 
     Base.metadata.create_all(bind=engine)
+
+    with engine.begin() as conn:
+        valid_codes = load_referentiel_codes(conn, args.limit_referentiel)
+        load_synonymes(conn, valid_codes, args.limit_referentiel)
+        load_postcoord(conn, valid_codes, args.limit_referentiel)
+        load_axes(conn, valid_codes, args.limit_referentiel)
+
     db = SessionLocal()
     try:
-        valid_codes = load_referentiel_codes(db, args.limit_referentiel)
-        load_synonymes(db, valid_codes, args.limit_referentiel)
-        load_postcoord(db, valid_codes, args.limit_referentiel)
-        load_axes(db, valid_codes, args.limit_referentiel)
         load_crh(db, valid_codes)
     finally:
         db.close()
