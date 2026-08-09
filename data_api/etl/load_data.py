@@ -21,22 +21,28 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import text
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-from app.database import engine, SessionLocal, Base
-from app import models
+from app.database import engine, SessionLocal, Base  # noqa: E402
+from app import models  # noqa: E402
 
 SERENIC_M_DIR = Path(os.getenv("SERENIC_M_DIR", r"C:\Users\mohan\Desktop\stage_aphp\Serenic_M"))
 
-DIAG_RE = re.compile(r"([^,(]+?)\s*\(([A-Z0-9]{3,10}(?:\.[A-Z0-9]+)?)\)")
+# Un code CIM-11 "racine", optionnellement suivi d'une ou plusieurs extensions de
+# post-coordination separees par '&' (voir docs/E5_incident_monitorage.md).
+_CODE_PART = r"[A-Z0-9]{2,10}(?:\.[A-Z0-9]+)?"
+CODE_RE = rf"{_CODE_PART}(?:&{_CODE_PART})*"
+DIAG_RE = re.compile(rf"([^(]+?)\s*\(({CODE_RE})\)")
 
 
 def parse_assistant_reply(reply: str) -> list[dict]:
     """Extrait les couples (libellé, code) depuis une réponse 'DP : ... / DAS : ...'."""
     diags = []
     dp_part, _, das_part = reply.partition("DAS :")
-    dp_match = DIAG_RE.search(dp_part)
+    # Isole le texte apres le marqueur "DP :" (sinon le libelle est prefixe de "DP : ").
+    _, _, dp_text = dp_part.partition("DP :")
+    dp_text = dp_text or dp_part
+    dp_match = DIAG_RE.search(dp_text)
     if dp_match:
         diags.append({"type_diag": "DP", "libelle": dp_match.group(1).strip(), "code": dp_match.group(2).strip()})
     if das_part and "aucun" not in das_part.lower():

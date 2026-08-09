@@ -61,3 +61,20 @@ def test_metrics_after_prediction(client):
     body = r.json()
     assert body["nb_requetes"] >= 1
     assert body["latence_moyenne_ms"] is not None
+
+
+def test_metrics_tracks_anomaly_when_dp_missing(client):
+    """Non-regression E5 : une prediction sans DP doit incrementer nb_anomalies_dp_manquant."""
+    before = client.get("/metrics").json()["nb_anomalies_dp_manquant"]
+
+    class NoDpPredictor:
+        def predict(self, texte_crh: str) -> dict:
+            return {"dp": None, "das": []}
+
+    from model_api.app.main import app, get_predictor
+
+    app.dependency_overrides[get_predictor] = lambda: NoDpPredictor()
+    client.post("/predict", json={"texte_crh": "Patient admis pour observation."}, headers=HEADERS)
+
+    after = client.get("/metrics").json()["nb_anomalies_dp_manquant"]
+    assert after == before + 1
