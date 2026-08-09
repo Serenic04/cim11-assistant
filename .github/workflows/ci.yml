@@ -43,6 +43,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Nom du repository en minuscules (requis par ghcr.io)
+        run: echo "REPO_LC=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
       - name: Login au registre GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -56,7 +59,7 @@ jobs:
           context: .
           file: data_api/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/data-api:latest,ghcr.io/${{ github.repository }}/data-api:${{ github.sha }}
+          tags: ghcr.io/${{ env.REPO_LC }}/data-api:latest,ghcr.io/${{ env.REPO_LC }}/data-api:${{ github.sha }}
 
       - name: Build & push model_api
         uses: docker/build-push-action@v6
@@ -64,7 +67,7 @@ jobs:
           context: .
           file: model_api/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/model-api:latest,ghcr.io/${{ github.repository }}/model-api:${{ github.sha }}
+          tags: ghcr.io/${{ env.REPO_LC }}/model-api:latest,ghcr.io/${{ env.REPO_LC }}/model-api:${{ github.sha }}
 
       - name: Build & push app_streamlit
         uses: docker/build-push-action@v6
@@ -72,4 +75,4 @@ jobs:
           context: .
           file: app_streamlit/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/app-streamlit:latest,ghcr.io/${{ github.repository }}/app-streamlit:${{ github.sha }}
+          tags: ghcr.io/${{ env.REPO_LC }}/app-streamlit:latest,ghcr.io/${{ env.REPO_LC }}/app-streamlit:${{ github.sha }}
