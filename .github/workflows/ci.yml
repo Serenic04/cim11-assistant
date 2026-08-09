@@ -20,11 +20,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r data-api/requirements.txt
+          pip install -r data_api/requirements.txt
           pip install -r requirements-dev.txt
 
       - name: Lint (flake8)
-        run: flake8 data-api/app --max-line-length=120 --extend-ignore=E203
+        run: flake8 data_api/app model_api/app --max-line-length=120 --extend-ignore=E203
 
       - name: Run tests (echantillon reduit, execution rapide)
         run: pytest tests/ -v

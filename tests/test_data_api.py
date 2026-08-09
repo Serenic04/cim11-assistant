@@ -11,16 +11,17 @@ from pathlib import Path
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["DATA_API_KEY"] = "test-key"
 
-sys.path.append(str(Path(__file__).resolve().parents[1] / "data-api"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import StaticPool, create_engine
+from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
 
-from app import models  # noqa: E402
-from app.database import Base, get_db
-from app.main import app
+from data_api.app import models  # noqa: E402
+from data_api.app.database import Base, get_db
+from data_api.app.main import app
 
 HEADERS = {"X-API-Key": "test-key"}
 
