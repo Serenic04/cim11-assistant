@@ -11,6 +11,12 @@
 - Le compteur `nb_anomalies_dp_manquant` sert de signal d'alerte : sur un corpus de CRH
   réels, un DP est identifié dans la quasi-totalité des cas. Une hausse de ce compteur
   indique un problème (modèle ou parsing) à investiguer.
+- **Dashboard visuel** (`app_streamlit/pages/1_Monitoring.py`) : page Streamlit dédiée à
+  l'équipe DIM/ops, distincte de l'application de codage. Affiche en temps réel la
+  disponibilité de `data_api` et `model_api` (`/health`), les métriques de `/metrics`
+  (compteurs, latence moyenne/p95), un historique de latence en mémoire de session, et
+  une alerte visuelle si `nb_anomalies_dp_manquant > 0`. Testé (`tests/test_monitoring_dashboard.py`,
+  4 tests : chargement, services indisponibles, métriques nominales, alerte anomalie).
 
 ## 2. Description de l'incident
 

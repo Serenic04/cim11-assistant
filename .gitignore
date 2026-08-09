@@ -15,8 +15,11 @@ secrets.*
 checkpoint-*/
 
 # Données volumineuses / sous licence (ATIH, CCAM...) — ne pas committer
-data-api/db/seed_data/*.csv
-!data-api/db/seed_data/.gitkeep
+data_api/db/seed_data/*.csv
+!data_api/db/seed_data/.gitkeep
+
+# Bases locales de developpement/test (SQLite)
+*.db
 
 # Divers
 .DS_Store

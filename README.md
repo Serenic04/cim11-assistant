@@ -7,7 +7,8 @@ Construit à partir du stage AP-HP (codage automatisé CIM-11 de comptes rendus 
 
 - `data_api/` — API REST (FastAPI) exposant le jeu de données CIM-11 (bloc 1, E1)
 - `model_api/` — API REST (FastAPI) encapsulant le modèle Llama-3-8B fine-tuné (bloc 2, E2/E3)
-- `app_streamlit/` — application d'aide au codage pour un utilisateur métier (bloc 3, E4/E5)
+- `app_streamlit/` — application d'aide au codage pour un utilisateur métier (bloc 3, E4)
+  + `pages/1_Monitoring.py` : dashboard de monitorage applicatif temps réel (bloc 3, E5)
 - `tests/` — tests automatisés (pytest), avec échantillons/mocks pour rester rapides en CI
 - `.github/workflows/` — chaîne d'intégration/livraison continue (C18/C19)
 - `docs/` — modélisation des données (Merise), documentation technique
