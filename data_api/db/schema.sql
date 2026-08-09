@@ -6,7 +6,7 @@ CREATE TABLE patient_fictif (
     nom             VARCHAR(100) NOT NULL,
     prenom          VARCHAR(100) NOT NULL,
     date_naissance  DATE,
-    sexe            CHAR(1) CHECK (sexe IN ('1', '2'))
+    sexe            CHAR(1) CHECK (sexe IN ('1', '2', '9'))
 );
 
 CREATE TABLE sejour (

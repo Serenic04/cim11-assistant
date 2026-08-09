@@ -7,12 +7,13 @@ from .database import Base
 
 class PatientFictif(Base):
     __tablename__ = "patient_fictif"
+    __table_args__ = (CheckConstraint("sexe IN ('1', '2', '9')", name="ck_patient_sexe"),)
 
     id_patient = Column(Integer, primary_key=True, index=True)
     nom = Column(String(100), nullable=False)
     prenom = Column(String(100), nullable=False)
     date_naissance = Column(Date)
-    sexe = Column(String(1))
+    sexe = Column(String(1))  # 1=homme, 2=femme, 9=non precise (convention INSEE)
 
     sejours = relationship("Sejour", back_populates="patient", cascade="all, delete-orphan")
 
