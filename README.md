@@ -16,3 +16,4 @@ Construit à partir du stage AP-HP (codage automatisé CIM-11 de comptes rendus 
 
 Toutes les données (CRH, identités patient) sont **synthétiques**, générées via l'API Mistral pendant
 le stage — aucune donnée patient réelle n'est utilisée.
+
