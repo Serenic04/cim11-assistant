@@ -48,3 +48,22 @@ def test_das_with_postcoordinated_code():
     assert len(result["das"]) == 2
     assert result["das"][0]["code"] == "1A62.2&XA6GV0"
     assert result["das"][1]["code"] == "5B7Z"
+
+
+def test_das_list_no_leading_comma_artifact():
+    """Regression trouvee en validant l'ETL sur les vraies donnees du stage : le
+    separateur ', ' entre deux items DAS ne doit pas se retrouver colle au libelle
+    de l'item suivant."""
+    reply = (
+        "DP : Fracture du col du fémur (NC72.2Z)\n"
+        "DAS : Dénutrition, sans précision (5B7Z), Carence en vitamine D, sans précision (5B57.Z), "
+        "Candidose des lèvres ou de la muqueuse buccale (1F23.0)"
+    )
+    result = parse_model_reply(reply)
+    libelles = [d["libelle"] for d in result["das"]]
+    assert libelles == [
+        "Dénutrition, sans précision",
+        "Carence en vitamine D, sans précision",
+        "Candidose des lèvres ou de la muqueuse buccale",
+    ]
+    assert all(not lib.startswith(",") for lib in libelles)

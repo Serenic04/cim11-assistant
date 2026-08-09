@@ -47,7 +47,8 @@ def parse_assistant_reply(reply: str) -> list[dict]:
         diags.append({"type_diag": "DP", "libelle": dp_match.group(1).strip(), "code": dp_match.group(2).strip()})
     if das_part and "aucun" not in das_part.lower():
         for m in DIAG_RE.finditer(das_part):
-            diags.append({"type_diag": "DAS", "libelle": m.group(1).strip(), "code": m.group(2).strip()})
+            libelle = m.group(1).strip().lstrip(",").strip()
+            diags.append({"type_diag": "DAS", "libelle": libelle, "code": m.group(2).strip()})
     return diags
 
 

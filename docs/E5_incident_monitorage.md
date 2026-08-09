@@ -62,6 +62,17 @@ capturée.
 code simple, code post-coordonné à une extension, à extensions multiples, libellé avec
 virgule interne, et DAS post-coordonné dans une liste.
 
+## 4bis. Validation sur les vraies données du stage
+
+En rejouant l'ETL complet (`data_api/etl/load_data.py --limit-referentiel 0`) sur les
+données réelles (34 663 codes CIM-11, 509 214 codes post-coordonnés, 150 CRH, 565
+diagnostics, 0 code hors référentiel — exécution en ~25 s), un **troisième défaut lié**
+a été détecté : le séparateur `", "` entre deux items DAS se retrouvait collé au libellé
+de l'item suivant (ex. `", Candidose des lèvres..."`), conséquence directe de
+l'autorisation de la virgule dans le motif de libellé (§3). Corrigé en retirant
+explicitement toute virgule de tête après capture (`libelle.strip().lstrip(",").strip()`),
+avec test de non-régression dédié (`test_das_list_no_leading_comma_artifact`).
+
 ## 5. Documentation de l'incident
 
 | | |
@@ -70,4 +81,4 @@ virgule interne, et DAS post-coordonné dans une liste.
 | Détecté par | Écriture de tests de non-régression à partir de données réelles |
 | Impact avant correctif | Perte silencieuse de diagnostics post-coordonnés + troncature de libellés avec virgule |
 | Correctif | Élargissement de `DIAG_RE`, isolation du marqueur `DP :`, ajout d'un indicateur de monitorage |
-| Non-régression | 5 nouveaux tests dédiés, suite complète 21/21 verte |
+| Non-régression | 6 nouveaux tests dédiés, suite complète 22/22 verte, + validation bout-en-bout sur les vraies données (ETL complet, API interrogée en conditions réelles) |

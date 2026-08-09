@@ -29,6 +29,10 @@ def parse_model_reply(reply: str) -> dict:
 
     if das_part and "aucun" not in das_part.lower():
         for m in DIAG_RE.finditer(das_part):
-            das.append({"libelle": m.group(1).strip(), "code": m.group(2).strip()})
+            # Le separateur ", " entre deux items DAS peut se retrouver colle au
+            # libelle suivant (le motif autorise desormais la virgule pour capturer
+            # les libelles du type "..., sans precision") : on le retire explicitement.
+            libelle = m.group(1).strip().lstrip(",").strip()
+            das.append({"libelle": libelle, "code": m.group(2).strip()})
 
     return {"dp": dp, "das": das}

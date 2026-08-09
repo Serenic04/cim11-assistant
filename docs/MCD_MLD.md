@@ -42,6 +42,16 @@ pseudonymat (hash de l'identifiant + séparation stricte identité / données de
 - `code_postcoord(code_postcoord PK, code_racine FK -> code_cim11, libelles_extensions)`
 - `axe_postcoord(id_axe PK, code_cim11 FK, axe_nom, allow_multiple, taille_axe, raison_arret)`
 
+## Limitation connue — synonymes
+
+`synonymes.csv` (dossier `Recherche_Synonymes_CIM10`) indexe les synonymes par **code
+CIM-10**, pas par code CIM-11 : le chargement dans `synonyme` (FK vers `code_cim11`)
+ne trouve donc aucune correspondance directe (0 ligne chargée en l'état). Une table de
+correspondance CIM-10 → CIM-11 existe déjà dans le stage
+(`Dictionnaire/CIM11/mapping/10To11MapToOneCategory.xlsx`) et permettrait de la
+raccorder ; non traité ici, hors périmètre de la certification (aucune compétence ne
+porte spécifiquement sur les synonymes).
+
 ## Volumétrie réelle observée (référence pour le dimensionnement)
 
 | Table source | Fichier stage | Lignes |
