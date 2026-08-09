@@ -28,3 +28,39 @@ jobs:
 
       - name: Run tests (echantillon reduit, execution rapide)
         run: pytest tests/ -v
+
+  package-and-deliver:
+    # Etape de packaging + livraison continue (C13, C19) : construit les images Docker
+    # de data_api et model_api et les publie sur le registre GitHub (ghcr.io).
+    # Ne se declenche que sur main, une fois les tests valides.
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login au registre GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push data_api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: data_api/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/data-api:latest,ghcr.io/${{ github.repository }}/data-api:${{ github.sha }}
+
+      - name: Build & push model_api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: model_api/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/model-api:latest,ghcr.io/${{ github.repository }}/model-api:${{ github.sha }}
