@@ -92,15 +92,37 @@ def load_referentiel_codes(conn, limit: int) -> set:
     return seen
 
 
+def _load_mapping_cim10_to_cim11() -> dict:
+    """Charge la table de correspondance officielle OMS CIM-10 -> CIM-11.
+
+    Le fichier source est 10To11MapToOneCategory.xlsx (mapping OMS, deja
+    utilise dans generation_crh/CIM_11_generate_scenarios_final_v2.ipynb pour
+    transcoder les CRH d'entrainement). Converti une fois en CSV simple
+    (cim10_to_cim11_mapping.csv, colonnes icd10Code/icd11Code) pour eviter une
+    dependance a pandas/openpyxl dans ce script (voir docstring du module).
+    """
+    path = Path(__file__).resolve().parent / "cim10_to_cim11_mapping.csv"
+    mapping = {}
+    for row in _read_csv_rows(path):
+        mapping[row["icd10Code"]] = row["icd11Code"]
+    return mapping
+
+
 def load_synonymes(conn, valid_codes: set, limit: int):
     path = SERENIC_M_DIR / "Recherche_Synonymes_CIM10" / "synonymes.csv"
     table = models.Synonyme.__table__
+    mapping_10_11 = _load_mapping_cim10_to_cim11()
     batch = []
     count = 0
+    n_non_mappes = 0
     for row in _read_csv_rows(path, delimiter=";"):
-        if row["code"] not in valid_codes:
+        # Les codes du fichier synonymes sont en CIM-10 (dictionnaire du stage) ;
+        # on les traduit en CIM-11 avant de verifier le referentiel.
+        code_cim11 = mapping_10_11.get(row["code"])
+        if code_cim11 is None or code_cim11 not in valid_codes:
+            n_non_mappes += 1
             continue
-        batch.append({"code_cim11": row["code"], "synonyme": row["synonyme"], "source": row.get("source")})
+        batch.append({"code_cim11": code_cim11, "synonyme": row["synonyme"], "source": row.get("source")})
         count += 1
         if len(batch) >= BATCH_SIZE:
             _bulk_insert(conn, table, batch)
@@ -108,7 +130,7 @@ def load_synonymes(conn, valid_codes: set, limit: int):
         if limit and count >= limit:
             break
     _bulk_insert(conn, table, batch)
-    print(f"synonyme : {count} lignes chargées")
+    print(f"synonyme : {count} lignes chargées ({n_non_mappes} codes CIM-10 non traduits ou hors référentiel)")
 
 
 def load_postcoord(conn, valid_codes: set, limit: int):
