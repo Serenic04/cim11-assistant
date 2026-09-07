@@ -89,6 +89,6 @@
   <!-- note RGPD -->
   <rect x="40" y="560" width="1100" height="56" rx="8" fill="#EAF0FA" stroke="#D8E1F0" stroke-width="1.5"/>
   <text x="60" y="583" font-size="12.5" font-weight="bold" fill="#1F3864">Données personnelles :</text>
-  <text x="205" y="583" font-size="12.5" fill="#1A1E29">aucun flux ne transporte de donnée patient réelle — les CRH traités sont synthétiques (générés par IA, cf. R1).</text>
-  <text x="60" y="604" font-size="12.5" fill="#1A1E29">Les flux F2 et F4 sont authentifiés par clé d'API (en-tête X-API-Key) ; aucune donnée n'est persistée par app_streamlit.</text>
+  <text x="215" y="583" font-size="12.5" fill="#1A1E29">dans le périmètre évalué, aucun CRH réel ne circule (corpus synthétique, aucun connecteur vers un SIH). En production, l'application traiterait</text>
+  <text x="60" y="604" font-size="12.5" fill="#1A1E29">par nature de vraies données de santé : avertissement à la saisie + journalisation sans contenu de CRH (art. 32 RGPD). F2 et F4 authentifiés par clé d'API ; aucune persistance côté app_streamlit.</text>
 </svg>
