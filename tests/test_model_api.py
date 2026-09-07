@@ -78,3 +78,35 @@ def test_metrics_tracks_anomaly_when_dp_missing(client):
 
     after = client.get("/metrics").json()["nb_anomalies_dp_manquant"]
     assert after == before + 1
+
+
+class FakePredictorSansDP(BasePredictor):
+    """Simule le cas d'anomalie : aucun diagnostic principal identifie."""
+
+    def predict(self, texte_crh: str) -> dict:
+        return {"dp": None, "das": []}
+
+
+def test_journalisation_ne_contient_aucun_contenu_de_crh(caplog):
+    """RGPD (art. 32) : l'alerte d'anomalie ne doit journaliser aucun extrait du CRH.
+
+    Un CRH reel contient des donnees de sante identifiantes ; seules des metadonnees
+    non identifiantes (longueur, empreinte non reversible) sont autorisees.
+    """
+    app.dependency_overrides[get_predictor] = lambda: FakePredictorSansDP()
+    texte_sensible = "MARTIN Jeanne, nee le 12/03/1954 - CHU de Lille - Cardiologie - douleur thoracique"
+    try:
+        with TestClient(app) as c, caplog.at_level("WARNING", logger="model_api.monitoring"):
+            r = c.post("/predict", json={"texte_crh": texte_sensible}, headers=HEADERS)
+            assert r.status_code == 200
+    finally:
+        app.dependency_overrides.clear()
+
+    journaux = "\n".join(rec.getMessage() for rec in caplog.records)
+    assert journaux, "l'anomalie DP manquant doit produire une alerte journalisee"
+    # Aucun fragment du CRH ne doit apparaitre dans les journaux.
+    for fragment in ("MARTIN", "Jeanne", "12/03/1954", "Lille", "thoracique"):
+        assert fragment not in journaux, f"fuite de donnee personnelle dans les journaux : {fragment}"
+    # Les metadonnees non identifiantes, elles, doivent bien etre presentes.
+    assert f"longueur_crh={len(texte_sensible)}" in journaux
+    assert "empreinte=" in journaux

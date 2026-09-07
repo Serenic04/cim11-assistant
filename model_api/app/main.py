@@ -5,6 +5,7 @@ Endpoints :
 - POST /predict  : prediction DP/DAS a partir d'un texte de CRH
 - GET  /metrics  : vecteur de restitution des metriques en temps reel (C11)
 """
+import hashlib
 import logging
 from collections import deque
 from statistics import mean
@@ -16,6 +17,27 @@ from .predictor import BasePredictor, LlamaCim11Predictor, timed_predict
 from .schemas import PredictIn, PredictOut
 
 logger = logging.getLogger("model_api.monitoring")
+
+# RGPD (art. 32) — regle de journalisation : aucun contenu de CRH n'est ecrit dans les
+# journaux. Un CRH reel contient des donnees de sante identifiantes (identite, service,
+# dates) ; or les journaux sont conserves, recopies et accessibles a plus de personnes
+# que le dossier medical lui-meme. On journalise donc uniquement des metadonnees non
+# identifiantes : la longueur du texte, et une empreinte SHA-256 tronquee.
+#
+# L'empreinte est a sens unique (le texte n'est pas reconstituable) mais deterministe :
+# deux echecs sur le meme document portent la meme empreinte, ce qui permet de reperer
+# une recidive sans savoir de quel patient il s'agit.
+#
+# Limite assumee : une empreinte reste une donnee *pseudonymisee*, donc une donnee
+# personnelle au sens du RGPD (considerant 26) — le risque est fortement reduit, pas
+# supprime. Les regles de conservation et d'acces aux journaux restent necessaires.
+_EMPREINTE_LONGUEUR = 16
+
+
+def _empreinte_crh(texte: str) -> str:
+    """Empreinte non reversible d'un CRH, pour correler des echecs sans journaliser le contenu."""
+    return hashlib.sha256(texte.encode("utf-8")).hexdigest()[:_EMPREINTE_LONGUEUR]
+
 
 app = FastAPI(
     title="CIM-11 Model API",
@@ -73,7 +95,11 @@ def predict(
             # en production (l'incident initial a ete detecte via les tests
             # de non-regression, cf. docs/E5_incident_monitorage.md).
             _anomaly_count += 1
-            logger.warning("Prediction sans DP identifie (texte_crh tronque=%r)", payload.texte_crh[:80])
+            logger.warning(
+                "Prediction sans DP identifie (longueur_crh=%d, empreinte=%s)",
+                len(payload.texte_crh),
+                _empreinte_crh(payload.texte_crh),
+            )
         return result
     except Exception:
         _error_count += 1

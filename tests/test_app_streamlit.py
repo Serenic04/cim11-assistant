@@ -44,7 +44,19 @@ def test_predict_button_enabled_when_text_reaches_minimum_length():
     at.text_area[0].input("Texte suffi").run()  # 11 caracteres, >= LONGUEUR_MIN_CRH (10)
     at.run()
     assert at.button[0].disabled is False
-    assert len(at.warning) == 0
+    # L'avertissement RGPD est permanent : on verifie l'absence du seul avertissement
+    # de longueur, pas l'absence de tout avertissement.
+    assert not any("au moins 10 caractères" in w.value for w in at.warning)
+
+
+def test_avertissement_rgpd_toujours_affiche():
+    """Mesure organisationnelle (RGPD art. 32) : l'avertissement sur les identifiants
+    directs doit etre visible en permanence, avant meme toute saisie."""
+    at = AppTest.from_file(APP_PATH)
+    at.run()
+    avertissements = " ".join(w.value for w in at.warning)
+    assert "ne collez pas de compte rendu réel" in avertissements.lower()
+    assert "identifiants" in avertissements.lower()
 
 
 @patch("app_streamlit.app.requests.get")

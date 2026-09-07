@@ -69,10 +69,25 @@ def main():
         "L'assistant propose un Diagnostic Principal (DP) et des Diagnostics Associés (DAS)."
     )
 
+    # Mesure organisationnelle (RGPD art. 32) : premiere barriere avant la saisie.
+    # Elle est completee par une mesure technique cote model_api, ou la journalisation
+    # ne conserve aucun contenu de CRH (voir model_api/app/main.py). Defense en profondeur :
+    # le filet technique fonctionne meme si cet avertissement n'est pas lu.
+    st.warning(
+        "**Environnement de démonstration — ne collez pas de compte rendu réel.** "
+        "Si vous testez avec un document authentique, retirez au préalable les identifiants "
+        "directs : nom, prénom, date de naissance, adresse, numéro de sécurité sociale, "
+        "numéro de dossier. Le contenu clinique, lui, doit être conservé : c'est ce que "
+        "l'assistant analyse pour proposer un codage."
+    )
+
     texte_crh = st.text_area(
-        label="Texte du compte rendu d'hospitalisation",
+        label="Texte du compte rendu d'hospitalisation (sans identifiants directs)",
         height=300,
         placeholder="Collez ici le CRH à coder...",
+        help="Les identifiants directs (nom, date de naissance, numéro de dossier) doivent être "
+             "retirés avant la saisie. Aucun contenu de CRH n'est conservé par l'application ni "
+             "journalisé par le service de prédiction.",
     )
 
     texte_saisi = texte_crh.strip()
