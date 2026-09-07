@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="640" viewBox="0 0 1180 640" font-family="Calibri, Arial, sans-serif">
+  <rect width="1180" height="640" fill="#FFFFFF"/>
+
+  <text x="590" y="38" text-anchor="middle" font-size="21" font-weight="bold" fill="#1F3864">Diagramme de flux de données — app_streamlit</text>
+  <text x="40" y="90" font-size="13" fill="#44506B">Légende : rectangle = entité externe · rectangle arrondi = processus · flèche = flux · double trait = magasin de données</text>
+
+  <!-- Entité externe : agent DIM -->
+  <rect x="40" y="150" width="180" height="90" fill="#FFFFFF" stroke="#1F3864" stroke-width="2.5"/>
+  <text x="130" y="185" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1E29">Agent du DIM</text>
+  <text x="130" y="207" text-anchor="middle" font-size="12" fill="#44506B">entité externe</text>
+  <text x="130" y="225" text-anchor="middle" font-size="12" fill="#44506B">(utilisateur)</text>
+
+  <!-- Processus 1 : app_streamlit -->
+  <rect x="330" y="130" width="210" height="130" rx="14" fill="#EAF0FA" stroke="#1F3864" stroke-width="2.5"/>
+  <text x="435" y="163" text-anchor="middle" font-size="15" font-weight="bold" fill="#1F3864">1. app_streamlit</text>
+  <text x="435" y="188" text-anchor="middle" font-size="12" fill="#1A1E29">Saisie du CRH,</text>
+  <text x="435" y="207" text-anchor="middle" font-size="12" fill="#1A1E29">validation (min. 10 car.),</text>
+  <text x="435" y="226" text-anchor="middle" font-size="12" fill="#1A1E29">restitution DP / DAS</text>
+  <text x="435" y="248" text-anchor="middle" font-size="11" fill="#44506B">processus</text>
+
+  <!-- Processus 2 : model_api -->
+  <rect x="700" y="105" width="210" height="110" rx="14" fill="#EAF0FA" stroke="#E0A346" stroke-width="2.5"/>
+  <text x="805" y="137" text-anchor="middle" font-size="15" font-weight="bold" fill="#1F3864">2. model_api</text>
+  <text x="805" y="161" text-anchor="middle" font-size="12" fill="#1A1E29">Llama-3-8B + LoRA</text>
+  <text x="805" y="180" text-anchor="middle" font-size="12" fill="#1A1E29">POST /predict</text>
+  <text x="805" y="201" text-anchor="middle" font-size="11" fill="#44506B">processus</text>
+
+  <!-- Processus 3 : data_api -->
+  <rect x="700" y="230" width="210" height="110" rx="14" fill="#EAF0FA" stroke="#1F3864" stroke-width="2.5"/>
+  <text x="805" y="262" text-anchor="middle" font-size="15" font-weight="bold" fill="#1F3864">3. data_api</text>
+  <text x="805" y="286" text-anchor="middle" font-size="12" fill="#1A1E29">Référentiel CIM-11</text>
+  <text x="805" y="305" text-anchor="middle" font-size="12" fill="#1A1E29">GET /codes/{code}</text>
+  <text x="805" y="326" text-anchor="middle" font-size="11" fill="#44506B">processus</text>
+
+  <!-- Magasin de données -->
+  <line x1="960" y1="255" x2="1150" y2="255" stroke="#1F3864" stroke-width="2.5"/>
+  <line x1="960" y1="318" x2="1150" y2="318" stroke="#1F3864" stroke-width="2.5"/>
+  <text x="1055" y="281" text-anchor="middle" font-size="14" font-weight="bold" fill="#1A1E29">D1 — PostgreSQL</text>
+  <text x="1055" y="303" text-anchor="middle" font-size="12" fill="#44506B">codes, synonymes, CRH</text>
+
+  <!-- Processus 4 : monitoring -->
+  <rect x="330" y="425" width="210" height="110" rx="14" fill="#EAF0FA" stroke="#1F3864" stroke-width="2.5"/>
+  <text x="435" y="457" text-anchor="middle" font-size="15" font-weight="bold" fill="#1F3864">4. Page Monitoring</text>
+  <text x="435" y="481" text-anchor="middle" font-size="12" fill="#1A1E29">Disponibilité, latence,</text>
+  <text x="435" y="500" text-anchor="middle" font-size="12" fill="#1A1E29">anomalies DP manquant</text>
+  <text x="435" y="521" text-anchor="middle" font-size="11" fill="#44506B">processus</text>
+
+  <defs>
+    <marker id="a" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 11 4, 0 8" fill="#1F3864"/>
+    </marker>
+    <marker id="b" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 11 4, 0 8" fill="#E0A346"/>
+    </marker>
+  </defs>
+
+  <!-- F1 agent -> app -->
+  <line x1="222" y1="178" x2="326" y2="178" stroke="#1F3864" stroke-width="2" marker-end="url(#a)"/>
+  <text x="274" y="169" text-anchor="middle" font-size="11.5" fill="#1A1E29">F1 texte du CRH</text>
+  <!-- F6 app -> agent -->
+  <line x1="326" y1="215" x2="222" y2="215" stroke="#1F3864" stroke-width="2" marker-end="url(#a)"/>
+  <text x="274" y="234" text-anchor="middle" font-size="11.5" fill="#1A1E29">F6 codage affiché</text>
+
+  <!-- F2 app -> model_api -->
+  <line x1="542" y1="160" x2="696" y2="145" stroke="#E0A346" stroke-width="2" marker-end="url(#b)"/>
+  <text x="619" y="139" text-anchor="middle" font-size="11.5" fill="#1A1E29">F2 CRH + clé d'API</text>
+  <!-- F3 model_api -> app -->
+  <line x1="696" y1="188" x2="542" y2="196" stroke="#E0A346" stroke-width="2" marker-end="url(#b)"/>
+  <text x="619" y="212" text-anchor="middle" font-size="11.5" fill="#1A1E29">F3 DP / DAS codés</text>
+
+  <!-- F4 app -> data_api -->
+  <line x1="542" y1="222" x2="696" y2="266" stroke="#1F3864" stroke-width="2" marker-end="url(#a)"/>
+  <text x="619" y="238" text-anchor="middle" font-size="11.5" fill="#1A1E29">F4 code CIM-11</text>
+  <!-- F5 data_api -> app -->
+  <line x1="696" y1="300" x2="542" y2="248" stroke="#1F3864" stroke-width="2" marker-end="url(#a)"/>
+  <text x="619" y="296" text-anchor="middle" font-size="11.5" fill="#1A1E29">F5 libellé officiel</text>
+
+  <!-- data_api <-> D1 -->
+  <line x1="912" y1="275" x2="956" y2="275" stroke="#1F3864" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="956" y1="300" x2="912" y2="300" stroke="#1F3864" stroke-width="2" marker-end="url(#a)"/>
+  <text x="1000" y="360" text-anchor="middle" font-size="11.5" fill="#1A1E29">requête SQL d'extraction</text>
+
+  <!-- F7 monitoring -> APIs -->
+  <path d="M 542 455 L 640 455 L 640 230 L 696 205" fill="none" stroke="#44506B" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#a)"/>
+  <path d="M 542 480 L 660 480 L 660 330 L 696 320" fill="none" stroke="#44506B" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#a)"/>
+  <text x="300" y="455" text-anchor="end" font-size="11.5" fill="#1A1E29">F7 GET /health, /metrics</text>
+  <text x="300" y="476" text-anchor="end" font-size="11.5" fill="#44506B">(les deux API)</text>
+
+  <!-- note RGPD -->
+  <rect x="40" y="560" width="1100" height="56" rx="8" fill="#EAF0FA" stroke="#D8E1F0" stroke-width="1.5"/>
+  <text x="60" y="583" font-size="12.5" font-weight="bold" fill="#1F3864">Données personnelles :</text>
+  <text x="205" y="583" font-size="12.5" fill="#1A1E29">aucun flux ne transporte de donnée patient réelle — les CRH traités sont synthétiques (générés par IA, cf. R1).</text>
+  <text x="60" y="604" font-size="12.5" fill="#1A1E29">Les flux F2 et F4 sont authentifiés par clé d'API (en-tête X-API-Key) ; aucune donnée n'est persistée par app_streamlit.</text>
+</svg>

@@ -1,0 +1,82 @@
+# Environnement de pre-production (C15) — lance la pile complete a partir des images
+# construites et publiees par la chaine d'integration continue sur ghcr.io
+# (job package-and-deliver de .github/workflows/ci.yml).
+#
+# Usage :
+#   export GHCR_OWNER=serenic04            # nom du compte GitHub, en minuscules (exige par ghcr.io)
+#   export DATA_API_KEY=... MODEL_API_KEY=...
+#   docker compose pull && docker compose up -d
+#
+# Pour reconstruire localement au lieu de tirer les images publiees :
+#   docker compose -f docker-compose.yml build
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cim11}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cim11}
+      POSTGRES_DB: ${POSTGRES_DB:-cim11}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cim11}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  data_api:
+    image: ghcr.io/${GHCR_OWNER:-serenic04}/cim11-assistant/data-api:latest
+    build:
+      context: .
+      dockerfile: data_api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-cim11}:${POSTGRES_PASSWORD:-cim11}@db:5432/${POSTGRES_DB:-cim11}
+      DATA_API_KEY: ${DATA_API_KEY:?definir DATA_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  model_api:
+    image: ghcr.io/${GHCR_OWNER:-serenic04}/cim11-assistant/model-api:latest
+    build:
+      context: .
+      dockerfile: model_api/Dockerfile
+    environment:
+      MODEL_API_KEY: ${MODEL_API_KEY:?definir MODEL_API_KEY}
+      BASE_MODEL: ${BASE_MODEL:-meta-llama/Meta-Llama-3-8B-Instruct}
+      ADAPTER_PATH: ${ADAPTER_PATH:-/app/Fine-Tuning/llama3_codage_cim11}
+      HF_TOKEN: ${HF_TOKEN:-}
+    ports:
+      - "8001:8001"
+    # L'inference reelle necessite un GPU. Sans GPU disponible, le service demarre
+    # quand meme (chargement differe du modele) : /health et /metrics repondent,
+    # seul /predict echoue. Decommenter pour exposer un GPU NVIDIA :
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  app_streamlit:
+    image: ghcr.io/${GHCR_OWNER:-serenic04}/cim11-assistant/app-streamlit:latest
+    build:
+      context: .
+      dockerfile: app_streamlit/Dockerfile
+    environment:
+      DATA_API_URL: http://data_api:8000
+      MODEL_API_URL: http://model_api:8001
+      DATA_API_KEY: ${DATA_API_KEY:?definir DATA_API_KEY}
+      MODEL_API_KEY: ${MODEL_API_KEY:?definir MODEL_API_KEY}
+    ports:
+      - "8501:8501"
+    depends_on:
+      - data_api
+      - model_api
+
+volumes:
+  pgdata:
