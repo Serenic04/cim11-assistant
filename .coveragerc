@@ -1,0 +1,29 @@
+# Couverture de test — perimetre et seuil etablis (C12).
+#
+# Perimetre : le code applicatif reellement execute en service (les deux API,
+# l'application, les garde-fous MLOps, les scripts de collecte testables).
+# Sont exclus les scripts qui exigent une ressource externe indisponible en
+# integration continue — entrainement LoRA (GPU), Spark, et chargement ETL
+# (fichiers volumineux du stage) : les inclure ferait chuter le taux sans rien
+# dire de la qualite des tests.
+#
+# Seuil retenu : 75 %. Mesure au 08/09/2026 : 80 %. La marge evite qu'un
+# refactoring legitime fasse echouer la chaine, tout en bloquant une chute reelle.
+
+[run]
+source =
+    data_api/app
+    model_api/app
+    app_streamlit
+    mlops/validate_dataset.py
+    mlops/validate_model.py
+    data_api/etl/scraping
+    data_api/etl/extraction_sql
+omit =
+    */__pycache__/*
+    */.venv/*
+
+[report]
+fail_under = 75
+show_missing = True
+skip_covered = False

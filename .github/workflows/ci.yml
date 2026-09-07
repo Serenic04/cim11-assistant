@@ -30,8 +30,11 @@ jobs:
       - name: Lint (flake8)
         run: flake8 data_api/app model_api/app app_streamlit --max-line-length=120 --extend-ignore=E203
 
-      - name: Run tests (echantillon reduit, execution rapide)
-        run: pytest tests/ -v
+      # Le seuil de couverture (75 %, perimetre defini dans .coveragerc) fait
+      # echouer la chaine s'il n'est plus atteint : la couverture n'est pas
+      # seulement mesuree, elle est tenue.
+      - name: Run tests + couverture (seuil 75 %)
+        run: pytest tests/ -v --cov --cov-report=term
 
   mlops-model:
     # Chaine MLOps du modele (C12, C13) : validation des donnees -> entrainement ->
