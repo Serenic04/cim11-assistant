@@ -24,3 +24,7 @@ data_api/db/seed_data/*.csv
 # Divers
 .DS_Store
 *.log
+
+# rapport de couverture local (non versionne)
+.coverage
+htmlcov/
