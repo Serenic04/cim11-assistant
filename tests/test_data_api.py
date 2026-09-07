@@ -92,6 +92,19 @@ def test_get_code_not_found(client):
     assert r.status_code == 404
 
 
+def test_get_crh_detail(client):
+    """Couverture du dernier point de terminaison : GET /crh/{id_crh} (nominal + 404)."""
+    r = client.get("/crh/1", headers=HEADERS)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["id_crh"] == 1
+    assert body["texte_crh"] == "CRH de test"
+    assert body["diagnostics"][0]["code_cim11"] == "NC72.2Z"
+
+    assert client.get("/crh/9999", headers=HEADERS).status_code == 404
+    assert client.get("/crh/1").status_code == 401
+
+
 def test_list_and_create_crh(client):
     r = client.get("/crh", headers=HEADERS)
     assert r.status_code == 200
