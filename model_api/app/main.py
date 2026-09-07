@@ -69,8 +69,9 @@ def predict(
         _recent_latencies_ms.append(result["latence_ms"])
         if result.get("dp") is None:
             # Alerte : un CRH non trivial devrait quasi toujours produire un DP.
-            # C'est ce signal qui a permis de detecter l'incident documente
-            # dans docs/E5_incident_monitorage.md.
+            # Ce signal permet de detecter une recidive de ce type d'incident
+            # en production (l'incident initial a ete detecte via les tests
+            # de non-regression, cf. docs/E5_incident_monitorage.md).
             _anomaly_count += 1
             logger.warning("Prediction sans DP identifie (texte_crh tronque=%r)", payload.texte_crh[:80])
         return result

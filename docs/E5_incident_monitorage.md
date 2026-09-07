@@ -37,7 +37,7 @@ C'est précisément le type d'anomalie que `nb_anomalies_dp_manquant` est censé
 `DIAG_RE` était : `([^,(]+?)\s*\(([A-Z0-9]{3,10}(?:\.[A-Z0-9]+)?)\)`.
 La classe de caractères `[A-Z0-9]{3,10}(?:\.[A-Z0-9]+)?` ne reconnaît qu'un code simple
 (éventuellement avec un point), pas la syntaxe de post-coordination CIM-11 avec un ou
-plusieurs `&EXTENSION` (jusqu'à 16 extensions chaînées observées dans le référentiel réel).
+plusieurs `&EXTENSION` (jusqu'à 18 extensions chaînées observées dans le référentiel réel).
 Comme le code entre parenthèses ne correspond plus au motif attendu, la parenthèse
 fermante n'est jamais atteinte et le `re.search` échoue entièrement sur ce diagnostic.
 
@@ -72,7 +72,7 @@ virgule interne, et DAS post-coordonné dans une liste.
 
 En rejouant l'ETL complet (`data_api/etl/load_data.py --limit-referentiel 0`) sur les
 données réelles (34 663 codes CIM-11, 509 214 codes post-coordonnés, 150 CRH, 565
-diagnostics, 0 code hors référentiel — exécution en ~25 s), un **troisième défaut lié**
+diagnostics, 0 code hors référentiel — exécution en environ 5 à 6 secondes), un **troisième défaut lié**
 a été détecté : le séparateur `", "` entre deux items DAS se retrouvait collé au libellé
 de l'item suivant (ex. `", Candidose des lèvres..."`), conséquence directe de
 l'autorisation de la virgule dans le motif de libellé (§3). Corrigé en retirant
