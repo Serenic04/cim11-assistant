@@ -5,11 +5,18 @@ interroge le model_api (prédiction DP/DAS) puis le data_api (libellé officiel 
 référentiel, pour vérification) et affiche le résultat.
 """
 import os
+import sys
+from pathlib import Path
 
 import requests
 import streamlit as st
 
-from app_streamlit.auth import ROLE_AGENT, exiger_connexion
+# `streamlit run app_streamlit/app.py` place le dossier du script en tete de sys.path,
+# pas la racine du depot : on l'ajoute explicitement pour que le paquet app_streamlit
+# soit importable aussi bien via Streamlit que via pytest.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app_streamlit.auth import ROLE_AGENT, exiger_connexion  # noqa: E402
 
 MODEL_API_URL = os.getenv("MODEL_API_URL", "http://localhost:8001")
 MODEL_API_KEY = os.getenv("MODEL_API_KEY", "dev-only-change-me")

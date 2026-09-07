@@ -10,10 +10,17 @@ import os
 import time
 from datetime import datetime
 
+import sys
+from pathlib import Path
+
 import requests
 import streamlit as st
 
-from app_streamlit.auth import ROLE_RESPONSABLE, exiger_connexion
+# Les pages Streamlit sont executees depuis app_streamlit/pages/ : on ajoute la racine
+# du depot a sys.path pour importer le paquet app_streamlit (garde d'acces).
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from app_streamlit.auth import ROLE_RESPONSABLE, exiger_connexion  # noqa: E402
 
 MODEL_API_URL = os.getenv("MODEL_API_URL", "http://localhost:8001")
 MODEL_API_KEY = os.getenv("MODEL_API_KEY", "dev-only-change-me")
