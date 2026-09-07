@@ -42,22 +42,27 @@ pseudonymat (hash de l'identifiant + séparation stricte identité / données de
 - `code_postcoord(code_postcoord PK, code_racine FK -> code_cim11, libelles_extensions)`
 - `axe_postcoord(id_axe PK, code_cim11 FK, axe_nom, allow_multiple, taille_axe, raison_arret)`
 
-## Limitation connue — synonymes
+## Limitation connue — synonymes (corrigée)
 
 `synonymes.csv` (dossier `Recherche_Synonymes_CIM10`) indexe les synonymes par **code
-CIM-10**, pas par code CIM-11 : le chargement dans `synonyme` (FK vers `code_cim11`)
-ne trouve donc aucune correspondance directe (0 ligne chargée en l'état). Une table de
-correspondance CIM-10 → CIM-11 existe déjà dans le stage
-(`Dictionnaire/CIM11/mapping/10To11MapToOneCategory.xlsx`) et permettrait de la
-raccorder ; non traité ici, hors périmètre de la certification (aucune compétence ne
-porte spécifiquement sur les synonymes).
+CIM-10**, pas par code CIM-11 : une comparaison directe avec `code_cim11` ne trouve donc
+aucune correspondance (0 ligne). Correctif appliqué (voir `etl/load_data.py`,
+`_load_mapping_cim10_to_cim11()`) : chaque code CIM-10 est traduit en CIM-11 via la table
+officielle OMS `10To11MapToOneCategory.xlsx` (convertie en
+`etl/cim10_to_cim11_mapping.csv`) avant le chargement. Résultat vérifié : 17 257
+synonymes chargés (203 634 non traduits ou hors référentiel — mappings 1 code CIM-10 →
+plusieurs codes CIM-11, table OMS `MapToMultipleCategories` non traitée, hors périmètre).
 
 ## Volumétrie réelle observée (référence pour le dimensionnement)
 
-| Table source | Fichier stage | Lignes |
+| Table source | Fichier stage | Lignes de données |
 |---|---|---|
-| code_cim11 | `cim11_termes.csv` | 119 537 |
-| synonyme | `synonymes.csv` | 220 891 |
-| code_postcoord | `codes_postcoord_realistes_v2.csv` | 570 133 |
-| axe_postcoord | `axes_par_code.csv` | 21 679 |
+| code_cim11 | `cim11_termes.csv` | 119 521 |
+| synonyme | `synonymes.csv` | 220 891 (17 257 chargés après traduction CIM-10→CIM-11) |
+| code_postcoord | `codes_postcoord_realistes_v2.csv` | 570 132 |
+| axe_postcoord | `axes_par_code.csv` | 21 678 |
 | crh + diagnostic | `finetune_train.jsonl` | 150 CRH annotés |
+
+Note : les comptages ci-dessus sont le nombre de lignes de *données* (`csv.DictReader`,
+en-tête exclu) — un simple `wc -l` sur ces fichiers donne des totaux légèrement supérieurs
+(en-tête inclus, et certains champs texte contiennent des retours à la ligne internes).
