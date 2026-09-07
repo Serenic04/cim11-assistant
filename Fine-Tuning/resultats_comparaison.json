@@ -1,0 +1,40 @@
+{
+  "Meta-Llama-3-8B-Instruct__crh": {
+    "modele": "Meta-Llama-3-8B-Instruct",
+    "source_texte": "crh",
+    "run_scenarios": "20260816_144033",
+    "date": "2026-08-17 02:48",
+    "n_sejours_train": 2850,
+    "n_sejours_eval": 950,
+    "n_lignes_train": 8261,
+    "n_lignes_eval": 2788,
+    "base": {
+      "strict": {
+        "precision": 0.7513,
+        "rappel": 0.3454,
+        "f1": 0.4733,
+        "exact_match": 0.2787
+      },
+      "souple": {
+        "precision": 0.8674,
+        "rappel": 0.3829,
+        "f1": 0.5313,
+        "exact_match": 0.3411
+      }
+    },
+    "finetuned": {
+      "strict": {
+        "precision": 0.5051,
+        "rappel": 0.577,
+        "f1": 0.5387,
+        "exact_match": 0.3497
+      },
+      "souple": {
+        "precision": 0.7001,
+        "rappel": 0.7781,
+        "f1": 0.737,
+        "exact_match": 0.6671
+      }
+    }
+  }
+}

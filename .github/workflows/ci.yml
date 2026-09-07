@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Declenchement manuel : utilise pour l'etape d'entrainement du modele (job
+  # train-model), qui necessite un runner equipe d'un GPU.
+  workflow_dispatch:
 
 jobs:
   lint-and-test:
@@ -30,11 +33,72 @@ jobs:
       - name: Run tests (echantillon reduit, execution rapide)
         run: pytest tests/ -v
 
+  mlops-model:
+    # Chaine MLOps du modele (C12, C13) : validation des donnees -> entrainement ->
+    # validation du modele. Les etapes 1 et 3 s'executent a chaque push ; l'etape 2
+    # (entrainement LoRA) necessite un GPU, indisponible sur les runners GitHub
+    # standard : elle est declaree ici et declenchable manuellement sur un runner
+    # equipe (voir le job train-model ci-dessous et docs/MLOPS.md).
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      # Etape 1 — test des donnees : bloque la chaine si le jeu d'entrainement
+      # est malforme (JSON, roles, longueur du CRH, DP parsable, doublons).
+      - name: Validation du jeu de donnees d'entrainement
+        run: python -m mlops.validate_dataset Fine-Tuning/data/sample_finetune_train.jsonl --min-exemples 10
+
+      # Etape 3 — validation du modele : integrite de l'adaptateur LoRA livre
+      # (modele de base, modules cibles, rang, alpha) et non-regression des
+      # performances mesurees sur le jeu d'evaluation (F1 et exact match souples).
+      - name: Validation du modele entraine (integrite + non-regression)
+        run: python -m mlops.validate_model
+
+      - name: Tests de la chaine MLOps
+        run: pytest tests/test_mlops.py -v
+
+  train-model:
+    # Etape 2 — entrainement LoRA. Declenchee manuellement (workflow_dispatch)
+    # car elle exige un runner equipe d'un GPU : environ 3 h sur un GPU unique
+    # (mesure reelle : 3 099 pas, 2 h 56 — cf. rapport R2). Les runners GitHub
+    # hebergés standards n'ont pas de GPU, d'ou ce declenchement separe plutot
+    # qu'une execution a chaque push.
+    if: github.event_name == 'workflow_dispatch'
+    needs: mlops-model
+    runs-on: [self-hosted, gpu]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validation du jeu de donnees complet
+        run: python -m mlops.validate_dataset "$FINETUNE_DATASET" --min-exemples 100
+        env:
+          FINETUNE_DATASET: ${{ vars.FINETUNE_DATASET }}
+
+      - name: Entrainement LoRA
+        run: python -m mlops.train --dataset "$FINETUNE_DATASET" --sortie Fine-Tuning/llama3_codage_cim11
+        env:
+          FINETUNE_DATASET: ${{ vars.FINETUNE_DATASET }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+      - name: Validation du modele reentraine
+        run: python -m mlops.validate_model
+
   package-and-deliver:
     # Etape de packaging + livraison continue (C13, C19) : construit les images Docker
     # de data_api et model_api et les publie sur le registre GitHub (ghcr.io).
     # Ne se declenche que sur main, une fois les tests valides.
-    needs: lint-and-test
+    needs: [lint-and-test, mlops-model]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:

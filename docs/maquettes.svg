@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" font-family="Calibri, Arial, sans-serif">
+  <rect width="1400" height="820" fill="#FFFFFF"/>
+  <text x="700" y="36" text-anchor="middle" font-size="21" font-weight="bold" fill="#1F3864">Maquettes fonctionnelles — app_streamlit (C14 / C17)</text>
+  <text x="700" y="60" text-anchor="middle" font-size="13" fill="#44506B">Wireframes basse fidélité établis avant développement · chaque zone renvoie à la user story qu'elle satisfait</text>
+
+  <!-- ================= ÉCRAN 1 : SAISIE ================= -->
+  <text x="40" y="98" font-size="15" font-weight="bold" fill="#1F3864">Écran 1 — Saisie du compte rendu</text>
+  <rect x="40" y="110" width="410" height="450" rx="6" fill="#FFFFFF" stroke="#1F3864" stroke-width="2"/>
+
+  <rect x="40" y="110" width="410" height="34" fill="#1F3864"/>
+  <text x="56" y="132" font-size="12.5" fill="#FFFFFF">Assistant de codage CIM-11</text>
+
+  <rect x="56" y="158" width="120" height="22" rx="4" fill="#EAF0FA" stroke="#D8E1F0"/>
+  <text x="66" y="173" font-size="11" fill="#1F3864">» app</text>
+  <rect x="56" y="184" width="120" height="22" rx="4" fill="#FFFFFF" stroke="#D8E1F0"/>
+  <text x="66" y="199" font-size="11" fill="#44506B">» Monitoring</text>
+  <text x="56" y="222" font-size="9.5" fill="#44506B">navigation — US4</text>
+
+  <rect x="196" y="158" width="238" height="52" rx="5" fill="#FDF6E3" stroke="#E0A346" stroke-width="1.5"/>
+  <text x="206" y="176" font-size="10" font-weight="bold" fill="#8A6100">! Avertissement RGPD permanent</text>
+  <text x="206" y="190" font-size="9.5" fill="#5C4300">Retirer les identifiants directs</text>
+  <text x="206" y="203" font-size="9.5" fill="#5C4300">avant saisie — art. 32 RGPD</text>
+
+  <text x="196" y="232" font-size="10.5" fill="#1A1E29">Label : « Texte du CRH (sans identifiants) »</text>
+  <text x="196" y="246" font-size="9" fill="#44506B">label associé au champ — critère WCAG</text>
+  <rect x="196" y="254" width="238" height="150" rx="5" fill="#F7F9FC" stroke="#8A94AB" stroke-width="1.5"/>
+  <text x="208" y="276" font-size="10.5" fill="#8A94AB">Collez ici le CRH à coder…</text>
+  <text x="196" y="420" font-size="9.5" fill="#44506B">zone de saisie multiligne — US1</text>
+
+  <rect x="196" y="434" width="112" height="30" rx="5" fill="#D8DEE9" stroke="#8A94AB"/>
+  <text x="252" y="454" text-anchor="middle" font-size="11" fill="#6B7280">Coder ce CRH</text>
+  <text x="196" y="480" font-size="9.5" fill="#B4552B">désactivé tant que texte &lt; 10 car.</text>
+  <text x="196" y="494" font-size="9.5" fill="#B4552B">+ avertissement textuel — US1</text>
+
+  <rect x="56" y="514" width="378" height="32" rx="5" fill="#EAF0FA" stroke="#D8E1F0"/>
+  <text x="66" y="534" font-size="10" fill="#1F3864">État initial : aucun résultat affiché</text>
+
+  <!-- ================= ÉCRAN 2 : RÉSULTAT ================= -->
+  <text x="495" y="98" font-size="15" font-weight="bold" fill="#1F3864">Écran 2 — Résultat du codage</text>
+  <rect x="495" y="110" width="410" height="450" rx="6" fill="#FFFFFF" stroke="#1F3864" stroke-width="2"/>
+  <rect x="495" y="110" width="410" height="34" fill="#1F3864"/>
+  <text x="511" y="132" font-size="12.5" fill="#FFFFFF">Assistant de codage CIM-11</text>
+
+  <rect x="511" y="158" width="378" height="30" rx="5" fill="#F7F9FC" stroke="#8A94AB"/>
+  <text x="523" y="178" font-size="10" fill="#44506B">CRH saisi (rappel, replié)</text>
+
+  <rect x="511" y="200" width="378" height="26" rx="5" fill="#E8F3EC" stroke="#2E7D5B" stroke-width="1.5"/>
+  <text x="523" y="218" font-size="10.5" fill="#1B5E3F">OK — Codage proposé — à valider par l'agent</text>
+
+  <rect x="511" y="238" width="378" height="76" rx="5" fill="#EAF0FA" stroke="#1F3864"/>
+  <text x="523" y="258" font-size="11" font-weight="bold" fill="#1F3864">DP — Diagnostic Principal</text>
+  <text x="523" y="276" font-size="10.5" fill="#1A1E29">Libellé proposé — code CIM-11</text>
+  <text x="523" y="293" font-size="9.5" fill="#44506B">Référentiel : libellé officiel recoupé via data_api</text>
+  <text x="523" y="307" font-size="9" fill="#44506B">vérification croisée — US2</text>
+
+  <rect x="511" y="326" width="378" height="88" rx="5" fill="#F7F9FC" stroke="#8A94AB"/>
+  <text x="523" y="346" font-size="11" font-weight="bold" fill="#44506B">DAS — Diagnostics Associés</text>
+  <text x="523" y="364" font-size="10.5" fill="#1A1E29">Libellé — code (1)</text>
+  <text x="523" y="381" font-size="10.5" fill="#1A1E29">Libellé — code (2)</text>
+  <text x="523" y="401" font-size="9" fill="#44506B">liste, chacun recoupé au référentiel — US2</text>
+
+  <rect x="511" y="428" width="378" height="44" rx="5" fill="#FDF6E3" stroke="#E0A346"/>
+  <text x="523" y="446" font-size="10" fill="#8A6100">Si le code est absent du référentiel :</text>
+  <text x="523" y="462" font-size="9.5" fill="#5C4300">code brut affiché + « vérification manuelle » — sans bloquer</text>
+
+  <rect x="511" y="484" width="378" height="30" rx="5" fill="#F7F9FC" stroke="#D8E1F0"/>
+  <text x="523" y="504" font-size="10" fill="#44506B">L'agent valide ou corrige dans son outil métier</text>
+
+  <!-- ================= ÉCRAN 3 : ERREUR + MONITORING ================= -->
+  <text x="950" y="98" font-size="15" font-weight="bold" fill="#1F3864">Écran 3 — Service indisponible (cas 3b)</text>
+  <rect x="950" y="110" width="410" height="200" rx="6" fill="#FFFFFF" stroke="#1F3864" stroke-width="2"/>
+  <rect x="950" y="110" width="410" height="34" fill="#1F3864"/>
+  <text x="966" y="132" font-size="12.5" fill="#FFFFFF">Assistant de codage CIM-11</text>
+
+  <rect x="966" y="158" width="378" height="60" rx="5" fill="#FBEDE6" stroke="#B4552B" stroke-width="1.5"/>
+  <text x="978" y="178" font-size="10.5" font-weight="bold" fill="#8A2F0C">X — Le service de prédiction est indisponible</text>
+  <text x="978" y="194" font-size="9.5" fill="#7A3A1C">Message explicite, en texte — pas seulement</text>
+  <text x="978" y="207" font-size="9.5" fill="#7A3A1C">une couleur. Réessayez plus tard.</text>
+
+  <text x="966" y="238" font-size="9.5" fill="#44506B">L'application reste utilisable, le texte saisi est conservé — US3</text>
+  <rect x="966" y="250" width="378" height="30" rx="5" fill="#F7F9FC" stroke="#8A94AB"/>
+  <text x="978" y="270" font-size="10" fill="#44506B">Zone de saisie toujours accessible</text>
+
+  <text x="950" y="342" font-size="15" font-weight="bold" fill="#1F3864">Écran 4 — Page Monitoring</text>
+  <rect x="950" y="354" width="410" height="206" rx="6" fill="#FFFFFF" stroke="#1F3864" stroke-width="2"/>
+  <rect x="950" y="354" width="410" height="30" fill="#1F3864"/>
+  <text x="966" y="374" font-size="12" fill="#FFFFFF">Monitoring</text>
+
+  <rect x="966" y="398" width="182" height="40" rx="5" fill="#E8F3EC" stroke="#2E7D5B"/>
+  <text x="976" y="415" font-size="10" fill="#1B5E3F">data_api — disponible</text>
+  <text x="976" y="430" font-size="9" fill="#44506B">état + libellé texte</text>
+  <rect x="1162" y="398" width="182" height="40" rx="5" fill="#FBEDE6" stroke="#B4552B"/>
+  <text x="1172" y="415" font-size="10" fill="#8A2F0C">model_api — indisponible</text>
+  <text x="1172" y="430" font-size="9" fill="#44506B">message d'erreur réel</text>
+
+  <rect x="966" y="448" width="378" height="46" rx="5" fill="#EAF0FA" stroke="#D8E1F0"/>
+  <text x="976" y="466" font-size="10" fill="#1F3864">Métriques : requêtes · erreurs · latence moyenne / p95</text>
+  <text x="976" y="484" font-size="10" fill="#1F3864">Anomalies « DP manquant » → alerte visuelle + texte</text>
+
+  <rect x="966" y="504" width="378" height="42" rx="5" fill="#F7F9FC" stroke="#8A94AB"/>
+  <text x="976" y="522" font-size="10" fill="#44506B">Graphique — historique de latence (session)</text>
+  <text x="976" y="538" font-size="9" fill="#44506B">boucle de supervision — US4</text>
+
+  <!-- ================= LÉGENDE US ================= -->
+  <rect x="40" y="588" width="1320" height="196" rx="8" fill="#EAF0FA" stroke="#D8E1F0" stroke-width="1.5"/>
+  <text x="60" y="614" font-size="13.5" font-weight="bold" fill="#1F3864">Correspondance maquettes, user stories et critères d'acceptation (dont accessibilité)</text>
+
+  <text x="60" y="642" font-size="11.5" font-weight="bold" fill="#1F3864">US1</text>
+  <text x="100" y="642" font-size="11" fill="#1A1E29">Saisir un CRH pour obtenir une proposition de codage</text>
+  <text x="640" y="642" font-size="11" fill="#44506B">Écran 1 · label associé au champ (WCAG) · bouton désactivé et avertissement textuel sous 10 car.</text>
+
+  <text x="60" y="678" font-size="11.5" font-weight="bold" fill="#1F3864">US2</text>
+  <text x="100" y="678" font-size="11" fill="#1A1E29">Voir le libellé officiel du code proposé</text>
+  <text x="640" y="678" font-size="11" fill="#44506B">Écran 2 · libellé recoupé via data_api · code brut affiché si absent, sans bloquer l'agent</text>
+
+  <text x="60" y="714" font-size="11.5" font-weight="bold" fill="#1F3864">US3</text>
+  <text x="100" y="714" font-size="11" fill="#1A1E29">Être informé si le service est indisponible</text>
+  <text x="640" y="714" font-size="11" fill="#44506B">Écran 3 · message explicite en texte, pas uniquement porté par la couleur (WCAG) · délai 30 s</text>
+
+  <text x="60" y="750" font-size="11.5" font-weight="bold" fill="#1F3864">US4</text>
+  <text x="100" y="750" font-size="11" fill="#1A1E29">Visualiser en temps réel la disponibilité des services</text>
+  <text x="640" y="750" font-size="11" fill="#44506B">Écran 4 · état par service en texte + couleur · alerte anomalie doublée d'un libellé explicite</text>
+
+  <text x="60" y="774" font-size="10" font-style="italic" fill="#44506B">Fidélité volontairement basse : ces maquettes fixent la structure, la hiérarchie de l'information et les critères d'accessibilité — pas l'habillage graphique, délégué aux composants standards de Streamlit.</text>
+</svg>
