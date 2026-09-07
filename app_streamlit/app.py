@@ -16,6 +16,11 @@ DATA_API_KEY = os.getenv("DATA_API_KEY", "dev-only-change-me")
 
 TIMEOUT_S = 30
 
+# Doit rester aligné avec model_api.app.schemas.PredictionRequest (min_length=10) :
+# la validation du formulaire est le premier filtre, model_api reste le filet de
+# sécurité côté serveur si ce formulaire est contourné (appel direct à l'API).
+LONGUEUR_MIN_CRH = 10
+
 
 def call_model_api(texte_crh: str) -> dict:
     """Appelle model_api /predict. Lève une exception si l'appel échoue (gérée par l'appelant)."""
@@ -70,7 +75,16 @@ def main():
         placeholder="Collez ici le CRH à coder...",
     )
 
-    if st.button("Coder ce CRH", type="primary", disabled=not texte_crh.strip()):
+    texte_saisi = texte_crh.strip()
+    texte_trop_court = bool(texte_saisi) and len(texte_saisi) < LONGUEUR_MIN_CRH
+    if texte_trop_court:
+        st.warning(f"Le compte rendu doit contenir au moins {LONGUEUR_MIN_CRH} caractères.")
+
+    if st.button(
+        "Coder ce CRH",
+        type="primary",
+        disabled=not texte_saisi or texte_trop_court,
+    ):
         with st.spinner("Analyse du compte rendu en cours..."):
             try:
                 result = call_model_api(texte_crh)
