@@ -10,6 +10,12 @@ from streamlit.testing.v1 import AppTest
 APP_PATH = str(Path(__file__).resolve().parents[1] / "app_streamlit" / "app.py")
 
 
+def _connecte(at, role="agent", identifiant="agent1"):
+    """Pre-authentifie la session : la garde d'acces (C17) precede tout le reste."""
+    at.session_state["utilisateur"] = {"identifiant": identifiant, "role": role}
+    return at
+
+
 def _fake_response(json_body, status_code=200):
     resp = MagicMock()
     resp.status_code = status_code
@@ -19,19 +25,19 @@ def _fake_response(json_body, status_code=200):
 
 
 def test_app_loads_without_error():
-    at = AppTest.from_file(APP_PATH)
+    at = _connecte(AppTest.from_file(APP_PATH))
     at.run()
     assert not at.exception
 
 
 def test_predict_button_disabled_when_empty():
-    at = AppTest.from_file(APP_PATH)
+    at = _connecte(AppTest.from_file(APP_PATH))
     at.run()
     assert at.button[0].disabled is True
 
 
 def test_predict_button_disabled_and_warning_when_text_too_short():
-    at = AppTest.from_file(APP_PATH)
+    at = _connecte(AppTest.from_file(APP_PATH))
     at.run()
     at.text_area[0].input("Court").run()  # 5 caracteres, strictement < LONGUEUR_MIN_CRH (10)
     assert at.button[0].disabled is True
@@ -39,7 +45,7 @@ def test_predict_button_disabled_and_warning_when_text_too_short():
 
 
 def test_predict_button_enabled_when_text_reaches_minimum_length():
-    at = AppTest.from_file(APP_PATH)
+    at = _connecte(AppTest.from_file(APP_PATH))
     at.run()
     at.text_area[0].input("Texte suffi").run()  # 11 caracteres, >= LONGUEUR_MIN_CRH (10)
     at.run()
@@ -52,7 +58,7 @@ def test_predict_button_enabled_when_text_reaches_minimum_length():
 def test_avertissement_rgpd_toujours_affiche():
     """Mesure organisationnelle (RGPD art. 32) : l'avertissement sur les identifiants
     directs doit etre visible en permanence, avant meme toute saisie."""
-    at = AppTest.from_file(APP_PATH)
+    at = _connecte(AppTest.from_file(APP_PATH))
     at.run()
     avertissements = " ".join(w.value for w in at.warning)
     assert "ne collez pas de compte rendu réel" in avertissements.lower()
@@ -72,10 +78,27 @@ def test_predict_flow(mock_post, mock_get):
     )
     mock_get.return_value = _fake_response({"code": "NC72.2Z", "libelle": "Fracture du col du femur, sans precision"})
 
-    at = AppTest.from_file(APP_PATH)
+    at = _connecte(AppTest.from_file(APP_PATH))
     at.run()
     at.text_area[0].input("Patient admis pour fracture du col du femur.").run()
     at.button[0].click().run()
 
     assert not at.exception
     assert any("Fracture du col du femur" in md.value for md in at.markdown)
+
+
+# --- Gestion des droits d'acces (C17) ---------------------------------------
+
+def test_formulaire_de_connexion_affiche_si_non_authentifie():
+    """Sans session, l'application n'expose ni le formulaire de saisie ni le bouton."""
+    at = AppTest.from_file(APP_PATH)
+    at.run()
+    assert not at.exception
+    assert len(at.text_area) == 0, "la zone de saisie ne doit pas etre accessible sans connexion"
+    assert any("Connexion" in h.value for h in at.subheader)
+
+
+def test_agent_accede_a_l_assistant():
+    at = _connecte(AppTest.from_file(APP_PATH), role="agent")
+    at.run()
+    assert len(at.text_area) == 1

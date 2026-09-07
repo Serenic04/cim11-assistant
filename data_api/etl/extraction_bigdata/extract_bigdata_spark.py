@@ -40,7 +40,8 @@ Optimisation
 
 Usage
 -----
-    python extract_bigdata_spark.py --csv /chemin/vers/codes_postcoord_realistes_v2.csv --out extraction_bigdata_top_codes.csv
+    python extract_bigdata_spark.py --csv /chemin/vers/codes_postcoord_realistes_v2.csv \
+                                     --out extraction_bigdata_top_codes.csv
 """
 import argparse
 import sys
@@ -51,7 +52,9 @@ from pyspark.sql.types import StructType, StructField, StringType
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--csv", required=True, help="Chemin vers codes_postcoord_realistes_v2.csv")
+    parser.add_argument(
+        "--csv", required=True, help="Chemin vers codes_postcoord_realistes_v2.csv"
+    )
     parser.add_argument("--out", default="extraction_bigdata_top_codes.csv")
     parser.add_argument("--top", type=int, default=20)
     args = parser.parse_args()

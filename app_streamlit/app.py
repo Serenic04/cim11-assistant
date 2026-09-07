@@ -9,6 +9,8 @@ import os
 import requests
 import streamlit as st
 
+from app_streamlit.auth import ROLE_AGENT, exiger_connexion
+
 MODEL_API_URL = os.getenv("MODEL_API_URL", "http://localhost:8001")
 MODEL_API_KEY = os.getenv("MODEL_API_KEY", "dev-only-change-me")
 DATA_API_URL = os.getenv("DATA_API_URL", "http://localhost:8000")
@@ -64,6 +66,13 @@ def render_diagnostic(label: str, diag: dict | None):
 def main():
     st.set_page_config(page_title="Assistant de codage CIM-11", page_icon="🩺")
     st.title("Assistant de codage CIM-11")
+
+    # Gestion des droits d'acces (C17) : l'assistant est accessible aux deux profils,
+    # la page Monitoring est reservee au profil "responsable" (voir auth.py).
+    utilisateur = exiger_connexion(ROLE_AGENT)
+    if utilisateur is None:
+        return
+
     st.write(
         "Collez le texte d'un compte rendu d'hospitalisation (CRH). "
         "L'assistant propose un Diagnostic Principal (DP) et des Diagnostics Associés (DAS)."

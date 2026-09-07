@@ -12,6 +12,12 @@ from streamlit.testing.v1 import AppTest
 PAGE_PATH = str(Path(__file__).resolve().parents[1] / "app_streamlit" / "pages" / "1_Monitoring.py")
 
 
+def _connecte(at, role="responsable", identifiant="resp1"):
+    """La page Monitoring est un espace protege : seul le profil responsable y accede."""
+    at.session_state["utilisateur"] = {"identifiant": identifiant, "role": role}
+    return at
+
+
 def _fake_response(json_body, status_code=200):
     resp = MagicMock()
     resp.status_code = status_code
@@ -21,7 +27,7 @@ def _fake_response(json_body, status_code=200):
 
 
 def test_dashboard_loads_without_error():
-    at = AppTest.from_file(PAGE_PATH)
+    at = _connecte(AppTest.from_file(PAGE_PATH))
     at.run(timeout=15)
     assert not at.exception
 
@@ -29,7 +35,7 @@ def test_dashboard_loads_without_error():
 @patch("requests.get")
 def test_dashboard_shows_services_down_when_unreachable(mock_get):
     mock_get.side_effect = requests.exceptions.ConnectionError("service indisponible")
-    at = AppTest.from_file(PAGE_PATH)
+    at = _connecte(AppTest.from_file(PAGE_PATH))
     at.run(timeout=15)
     assert not at.exception
     assert len(at.error) == 2  # data_api et model_api tous deux indisponibles
@@ -55,7 +61,7 @@ def test_dashboard_shows_metrics_when_services_up(mock_get):
 
     mock_get.side_effect = fake_get
 
-    at = AppTest.from_file(PAGE_PATH)
+    at = _connecte(AppTest.from_file(PAGE_PATH))
     at.run(timeout=15)
 
     assert not at.exception
@@ -86,9 +92,26 @@ def test_dashboard_flags_dp_missing_anomaly(mock_get):
 
     mock_get.side_effect = fake_get
 
-    at = AppTest.from_file(PAGE_PATH)
+    at = _connecte(AppTest.from_file(PAGE_PATH))
     at.run(timeout=15)
 
     assert not at.exception
     assert len(at.warning) >= 1
     assert any("2 prédiction" in w.value for w in at.warning)
+
+
+# --- Gestion des droits d'acces (C17) ---------------------------------------
+
+def test_agent_ne_peut_pas_acceder_au_monitorage():
+    """Un agent connecte doit se voir refuser cet espace reserve au responsable."""
+    at = _connecte(AppTest.from_file(PAGE_PATH), role="agent", identifiant="agent1")
+    at.run(timeout=15)
+    assert not at.exception
+    assert any("Accès refusé" in e.value for e in at.error)
+
+
+def test_visiteur_non_connecte_voit_le_formulaire_de_connexion():
+    at = AppTest.from_file(PAGE_PATH)
+    at.run(timeout=15)
+    assert not at.exception
+    assert any("Connexion" in h.value for h in at.subheader)

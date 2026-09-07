@@ -13,6 +13,8 @@ from datetime import datetime
 import requests
 import streamlit as st
 
+from app_streamlit.auth import ROLE_RESPONSABLE, exiger_connexion
+
 MODEL_API_URL = os.getenv("MODEL_API_URL", "http://localhost:8001")
 MODEL_API_KEY = os.getenv("MODEL_API_KEY", "dev-only-change-me")
 DATA_API_URL = os.getenv("DATA_API_URL", "http://localhost:8000")
@@ -21,6 +23,13 @@ TIMEOUT_S = 5
 
 st.set_page_config(page_title="Monitorage — CIM-11 Assistant", page_icon="📊", layout="wide")
 st.title("📊 Monitorage applicatif")
+
+# Gestion des droits d'acces (C17) : cet espace expose des indicateurs d'exploitation
+# (volumetrie, latence, taux d'anomalie) reserves au profil "responsable". Un agent
+# connecte se voit refuser l'acces, et un visiteur non connecte doit s'authentifier.
+if exiger_connexion(ROLE_RESPONSABLE) is None:
+    st.stop()
+
 st.caption(
     "Dispositif de monitorage decrit dans docs/E5_incident_monitorage.md — "
     "sante des services + metriques de prediction en temps reel."

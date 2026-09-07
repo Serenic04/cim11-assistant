@@ -88,7 +88,10 @@ def main():
         writer = csv.writer(f)
         writer.writerow(["code_cim11", "libelle", "nb_synonymes", "nb_postcoord", "exemple_crh"])
         for row in rows:
-            writer.writerow([row["code_cim11"], row["libelle"], row["nb_synonymes"], row["nb_postcoord"], row["exemple_crh"]])
+            writer.writerow([
+                row["code_cim11"], row["libelle"], row["nb_synonymes"],
+                row["nb_postcoord"], row["exemple_crh"],
+            ])
 
     print(f"{len(rows)} lignes extraites -> {out_path}")
     if rows:
