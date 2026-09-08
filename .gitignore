@@ -28,3 +28,6 @@ data_api/db/seed_data/*.csv
 # rapport de couverture local (non versionne)
 .coverage
 htmlcov/
+
+# archive envoyee a Colab, regeneree a la demande
+colab_payload.zip

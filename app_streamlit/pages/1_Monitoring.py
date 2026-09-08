@@ -26,7 +26,9 @@ MODEL_API_URL = os.getenv("MODEL_API_URL", "http://localhost:8001")
 MODEL_API_KEY = os.getenv("MODEL_API_KEY", "dev-only-change-me")
 DATA_API_URL = os.getenv("DATA_API_URL", "http://localhost:8000")
 
-TIMEOUT_S = 5
+# Sonde de disponibilite : volontairement courte pour que la page reste reactive quand
+# un service est tombe. Surchargeable si un service est heberge a distance (tunnel).
+TIMEOUT_S = int(os.getenv("MONITORING_TIMEOUT_S", "5"))
 
 st.set_page_config(page_title="Monitorage — CIM-11 Assistant", page_icon="📊", layout="wide")
 st.title("📊 Monitorage applicatif")

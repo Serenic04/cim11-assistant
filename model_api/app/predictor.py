@@ -13,16 +13,46 @@ from .parsing import parse_model_reply
 BASE_MODEL = os.getenv("BASE_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
 ADAPTER_PATH = os.getenv("ADAPTER_PATH", "../Fine-Tuning/llama3_codage_cim11")
 
+# Consigne systeme. Elle reproduit celle du protocole d'evaluation du modele
+# (Fine-Tuning/Test_checkpoint_3099.ipynb), qui a mesure les performances annoncees
+# dans le rapport E2 : F1 souple 0,7370 et exact match souple 0,6671.
+#
+# Le paragraphe sur la post-coordination est indispensable. Mesure du 08/09/2026 sur
+# 5 comptes rendus du corpus, en interrogeant l'API deployee : sans ce paragraphe,
+# le modele n'identifie un Diagnostic Principal que dans 1 cas sur 5 ; avec, dans
+# 5 cas sur 5. Le jeu d'entrainement, lui, utilisait une consigne plus courte : c'est
+# a l'evaluation que la consigne enrichie a ete introduite, et c'est donc elle qui
+# doit etre servie en production pour que le comportement corresponde aux mesures.
 SYSTEM_PROMPT = (
     "Tu es un médecin DIM (département d'information médicale) expert en codage CIM-11.\n"
-    "On te fournit le texte d'un compte rendu d'hospitalisation (CRH) rédigé en français.\n"
+    "On te fournit un texte clinique rédigé en français.\n"
     "Ta tâche est d'identifier :\n"
     "- Le Diagnostic Principal (DP) : le diagnostic qui a motivé l'hospitalisation\n"
     "- Les Diagnostics Associés (DAS) : les autres diagnostics documentés et traités\n\n"
+    "La CIM-11 utilise la post-coordination : un code racine peut être précisé par une ou\n"
+    "plusieurs extensions du chapitre X, reliées par le caractère &.\n"
+    "Exemple : 2C6Z&XA3LS6 = tumeur du sein, quadrant interne supérieur.\n"
+    "Quand le texte donne une précision de localisation, de latéralité, de sévérité ou de\n"
+    "temporalité, exprime-la sous forme d'extension plutôt que de t'en tenir au code racine.\n\n"
     "Réponds UNIQUEMENT dans ce format exact, sans aucun autre texte :\n"
     "DP : <Libellé complet du diagnostic> (<code CIM-11>)\n"
     "DAS : <Libellé> (<code>), <Libellé> (<code>), ...\n\n"
     "Si aucun DAS n'est identifié, écris : DAS : aucun"
+)
+
+# Gabarit du message utilisateur. Il doit reproduire EXACTEMENT celui du jeu
+# d'entrainement (Fine-Tuning/data/*.jsonl) et du script d'evaluation qui a mesure
+# les performances annoncees : meme en-tete, memes delimiteurs '---' ouvrant ET
+# fermant, meme consigne finale. Un modele affine sur un gabarit precis se degrade
+# fortement si le gabarit d'inference en differe.
+GABARIT_UTILISATEUR = (
+    "Voici le compte rendu d'hospitalisation à coder en CIM-11 :\n"
+    "\n"
+    "---\n"
+    "{texte}\n"
+    "---\n"
+    "\n"
+    "Propose le codage CIM-11 (DP et DAS)."
 )
 
 
@@ -51,7 +81,17 @@ class LlamaCim11Predictor(BasePredictor):
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
         )
-        self._tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, token=os.getenv("HF_TOKEN"))
+        # Le tokenizer est celui sauvegarde AVEC l'adaptateur : il embarque le gabarit
+        # de conversation (chat_template.jinja) utilise pendant l'entrainement, et repris
+        # tel quel par le script d'evaluation qui a mesure les performances annoncees.
+        # Charger celui du modele de base applique un gabarit different et degrade
+        # fortement les sorties. On retombe sur le modele de base uniquement si
+        # l'adaptateur n'embarque pas de tokenizer.
+        try:
+            self._tokenizer = AutoTokenizer.from_pretrained(ADAPTER_PATH)
+        except Exception:
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                BASE_MODEL, token=os.getenv("HF_TOKEN"))
         base = AutoModelForCausalLM.from_pretrained(
             BASE_MODEL,
             quantization_config=bnb_config,
@@ -63,23 +103,34 @@ class LlamaCim11Predictor(BasePredictor):
 
     def predict(self, texte_crh: str) -> dict:
         self._load()
-        user_content = (
-            "Voici le compte rendu d'hospitalisation à coder en CIM-11 :\n\n---\n" + texte_crh
-        )
+        user_content = GABARIT_UTILISATEUR.format(texte=texte_crh.strip())
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_content},
         ]
-        inputs = self._tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True, return_tensors="pt"
-        ).to(self._model.device)
-
         import torch
+
+        # La tokenisation reproduit celle du protocole d'evaluation : le gabarit est
+        # d'abord rendu en texte, puis tokenise separement. Ce n'est pas un detail de
+        # style — cette sequence ajoute un second jeton de debut, et l'inference doit
+        # partir du meme prefixe que celui sur lequel les performances ont ete mesurees.
+        # Passer par return_tensors="pt" directement changerait ce prefixe, et selon la
+        # version de transformers renverrait un BatchEncoding que generate() refuse.
+        texte_gabarit = self._tokenizer.apply_chat_template(
+            messages, add_generation_prompt=True, tokenize=False
+        )
+        entree = self._tokenizer(texte_gabarit, return_tensors="pt").to(self._model.device)
+
         with torch.no_grad():
             output = self._model.generate(
-                inputs, max_new_tokens=400, do_sample=False, temperature=None, top_p=None
+                **entree,
+                max_new_tokens=400,
+                do_sample=False,
+                pad_token_id=self._tokenizer.pad_token_id,
             )
-        reply = self._tokenizer.decode(output[0][inputs.shape[-1]:], skip_special_tokens=True)
+        reply = self._tokenizer.decode(
+            output[0][entree["input_ids"].shape[-1]:], skip_special_tokens=True
+        )
         return parse_model_reply(reply)
 
 

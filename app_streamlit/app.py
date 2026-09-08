@@ -23,7 +23,10 @@ MODEL_API_KEY = os.getenv("MODEL_API_KEY", "dev-only-change-me")
 DATA_API_URL = os.getenv("DATA_API_URL", "http://localhost:8000")
 DATA_API_KEY = os.getenv("DATA_API_KEY", "dev-only-change-me")
 
-TIMEOUT_S = 30
+# Delai d'attente d'une prediction. 30 s suffisent pour une inference locale sur GPU ;
+# le parametre est surchargeable car un modele heberge a distance (GPU distant expose
+# par un tunnel) demande davantage : generation de 400 jetons + latence reseau.
+TIMEOUT_S = int(os.getenv("MODEL_API_TIMEOUT_S", "30"))
 
 # Doit rester aligné avec model_api.app.schemas.PredictionRequest (min_length=10) :
 # la validation du formulaire est le premier filtre, model_api reste le filet de
